@@ -1,0 +1,58 @@
+---
+# Host preparation for Ping DS 8 (config store)
+- name: Gather facts
+  ansible.builtin.setup:
+    gather_subset: minimal
+
+- name: Get free disk space (KB) for install path
+  ansible.builtin.shell: "df -k {{ (ds_install_path | default('/opt/apps/opendj')).rsplit('/', 1)[0] | default('/opt') }} | tail -1 | awk '{print $4}'"
+  register: _df_kb
+  changed_when: false
+
+- name: Assert sufficient disk space (min {{ pingds_min_disk_free_gb }} GB)
+  ansible.builtin.assert:
+    that: (_df_kb.stdout | int) >= (pingds_min_disk_free_gb * 1024 * 1024)
+    fail_msg: "Insufficient disk space. Need at least {{ pingds_min_disk_free_gb }} GB free."
+
+- name: Ensure Java is installed
+  ansible.builtin.package:
+    name: "{{ pingds_java_packages }}"
+    state: present
+  when: pingds_java_packages is defined and pingds_java_packages | length > 0
+
+- name: Ensure install user and group exist
+  ansible.builtin.user:
+    name: "{{ pingds_install_user }}"
+    group: "{{ pingds_install_group }}"
+    create_home: true
+    system: true
+  when: pingds_install_user is defined
+
+- name: Ensure install path exists and is owned
+  ansible.builtin.file:
+    path: "{{ ds_install_path | default('/opt/apps/opendj') }}"
+    state: directory
+    owner: "{{ pingds_install_user | default(ansible_user_id) }}"
+    group: "{{ pingds_install_group | default(pingds_install_user) }}"
+    mode: "0755"
+
+- name: Open firewall ports for DS (firewalld)
+  ansible.builtin.command: "firewall-cmd --permanent --add-port={{ item }}/tcp"
+  loop: "{{ pingds_firewall_ports | default([]) }}"
+  when: pingds_firewall_ports is defined and pingds_firewall_ports | length > 0
+  changed_when: true
+  ignore_errors: true
+
+- name: Reload firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded
+  when: pingds_firewall_ports is defined and pingds_firewall_ports | length > 0
+  ignore_errors: true
+
+- name: Ensure NTP/chrony is running (time sync for replication)
+  ansible.builtin.service:
+    name: "{{ 'chronyd' if ansible_os_family == 'RedHat' else 'chrony' }}"
+    state: started
+    enabled: true
+  ignore_errors: true

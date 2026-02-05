@@ -1,0 +1,19 @@
+# Vault and secrets
+*.vault
+vault.yml
+vault.yaml
+*_vault*
+
+# Ansible
+*.retry
+.ansible/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# DS ZIP (large binary)
+*.zip

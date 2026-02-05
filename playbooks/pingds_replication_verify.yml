@@ -1,0 +1,6 @@
+---
+# Replication verification only
+- name: Verify replication status
+  hosts: pingds_config
+  roles:
+    - pingds_replication_verify

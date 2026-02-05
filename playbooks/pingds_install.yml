@@ -1,0 +1,7 @@
+---
+# Install Ping DS only (am-config profile; skips if already installed)
+- name: Install Ping DS (am-config)
+  hosts: pingds_config
+  serial: 1
+  roles:
+    - pingds_install

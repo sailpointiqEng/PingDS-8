@@ -1,0 +1,19 @@
+---
+# Verify replication status (dsreplication status)
+- name: Get replication status
+  ansible.builtin.command:
+    cmd: "{{ ds_install_path }}/bin/dsreplication status --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ admin_connector_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ root_user_password }} --no-prompt"
+  register: _repl_status
+  changed_when: false
+  no_log: true
+
+- name: Display replication status
+  ansible.builtin.debug:
+    var: _repl_status.stdout_lines
+  when: _repl_status.stdout_lines is defined
+
+- name: Assert replication is enabled
+  ansible.builtin.assert:
+    that: _repl_status.rc == 0
+    fail_msg: "dsreplication status failed. Check replication configuration."
+  when: _repl_status.rc is defined

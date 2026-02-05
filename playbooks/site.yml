@@ -1,0 +1,12 @@
+---
+# Full Ping DS config store deployment (first-time or re-run; install skips if already installed)
+# Use with Tower job template "PingDS – Full", same inventory and credentials.
+- name: Full deployment – host prepare, install, configure, verify, validate
+  hosts: pingds_config
+  serial: 1  # install order: one host at a time so bootstrap targets exist
+  roles:
+    - pingds_host_prepare
+    - pingds_install
+    - pingds_configure
+    - pingds_replication_verify
+    - pingds_post_deploy_validate

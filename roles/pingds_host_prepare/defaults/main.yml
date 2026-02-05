@@ -1,0 +1,13 @@
+# Defaults for host preparation (Ping DS)
+pingds_java_packages:
+  - java-11-openjdk
+  - java-11-openjdk-devel
+pingds_install_user: opendj
+pingds_install_group: opendj
+pingds_min_disk_free_gb: 10
+pingds_firewall_ports:
+  - 1389
+  - 1636
+  - 4444
+  - 8989
+  - 8443

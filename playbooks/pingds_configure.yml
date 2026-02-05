@@ -1,0 +1,6 @@
+---
+# Configure / start Ping DS only
+- name: Configure and start Ping DS
+  hosts: pingds_config
+  roles:
+    - pingds_configure

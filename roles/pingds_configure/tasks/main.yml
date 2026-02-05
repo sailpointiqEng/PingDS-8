@@ -1,0 +1,25 @@
+---
+# Start Ping DS and optional post-setup configuration
+- name: Check if DS is running
+  ansible.builtin.command: "{{ ds_install_path }}/bin/status"
+  register: _status
+  changed_when: false
+  failed_when: false
+
+- name: Start Ping DS
+  ansible.builtin.command: "{{ ds_install_path }}/bin/start-ds"
+  when: _status.rc != 0
+
+- name: Wait for DS to be ready
+  ansible.builtin.wait_for:
+    port: "{{ admin_connector_port }}"
+    host: "127.0.0.1"
+    delay: 3
+    timeout: 60
+  when: _status.rc != 0
+
+- name: Verify DS is running
+  ansible.builtin.command: "{{ ds_install_path }}/bin/status"
+  register: _status_after
+  changed_when: false
+  failed_when: _status_after.rc != 0

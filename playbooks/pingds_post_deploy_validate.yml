@@ -1,0 +1,6 @@
+---
+# Post-deployment validation (service, binds, base DN, AM config admin, replication)
+- name: Post-deploy validation
+  hosts: pingds_config
+  roles:
+    - pingds_post_deploy_validate

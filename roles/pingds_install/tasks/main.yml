@@ -1,0 +1,90 @@
+---
+# Ping DS 8 install with am-config profile and replication bootstrap
+- name: Check if Ping DS is already installed
+  ansible.builtin.stat:
+    path: "{{ ds_install_path }}/config/server.xml"
+  register: _ds_config
+  vars:
+    ds_install_path: "{{ ds_install_path | default('/opt/apps/opendj') }}"
+
+- name: Set pingds_installed fact
+  ansible.builtin.set_fact:
+    pingds_installed: "{{ _ds_config.stat.exists | default(false) }}"
+
+- name: Ensure install base path exists (/opt/apps)
+  ansible.builtin.file:
+    path: "{{ ds_install_base | default(ds_install_path.rsplit('/', 1)[0]) }}"
+    state: directory
+    mode: "0755"
+  when: not pingds_installed
+
+- name: Copy DS ZIP to host (if using project file)
+  ansible.builtin.copy:
+    src: "{{ ds_zip_name }}"
+    dest: "{{ ds_zip_path }}"
+    mode: "0644"
+  when: not pingds_installed and ds_zip_name is defined
+  ignore_errors: true
+
+- name: Unzip DS distribution to {{ ds_install_base }} (result {{ ds_install_path }})
+  ansible.builtin.unarchive:
+    src: "{{ ds_zip_path }}"
+    dest: "{{ ds_install_base | default(ds_install_path.rsplit('/', 1)[0]) }}"
+    remote_src: true
+    creates: "{{ ds_install_path }}/setup"
+  when: not pingds_installed
+
+- name: Require deployment_id and deployment_id_password
+  ansible.builtin.assert:
+    that:
+      - deployment_id is defined
+      - deployment_id | length > 0
+      - deployment_id_password is defined
+    fail_msg: "Set deployment_id and deployment_id_password (e.g. in Tower Vault). Generate once with dskeymgr create-deployment-id."
+  when: not pingds_installed
+
+- name: Build setup command arguments
+  ansible.builtin.set_fact:
+    _setup_args: >-
+      --serverId {{ server_id }}
+      --deploymentId {{ deployment_id }}
+      --deploymentIdPassword {{ deployment_id_password }}
+      --rootUserDN {{ root_user_dn }}
+      --rootUserPassword {{ root_user_password }}
+      --monitorUserPassword {{ monitor_user_password }}
+      --hostname {{ hostname }}
+      --adminConnectorPort {{ admin_connector_port }}
+      --ldapPort {{ ldap_port }}
+      --enableStartTls
+      --ldapsPort {{ ldaps_port }}
+      --httpsPort {{ https_port }}
+      --replicationPort {{ replication_port }}
+      {% for rs in bootstrap_replication_servers %}
+      --bootstrapReplicationServer {{ rs }}
+      {% endfor %}
+      --profile am-config
+      --set am-config/amConfigAdminPassword:{{ am_config_admin_password }}
+      --acceptLicense
+      {% if pingds_setup_start_server %}
+      --start
+      {% endif %}
+  when:
+    - not pingds_installed
+    - deployment_id is defined
+    - deployment_id | length > 0
+
+- name: Run Ping DS setup (am-config profile)
+  ansible.builtin.command: "{{ ds_install_path }}/setup {{ _setup_args }}"
+  when: not pingds_installed and _setup_args is defined
+  no_log: true
+  register: _setup_run
+
+- name: Fail if setup failed
+  ansible.builtin.fail:
+    msg: "Ping DS setup failed. Check logs on host."
+  when: not pingds_installed and _setup_run is defined and _setup_run.rc is defined and _setup_run.rc != 0
+
+- name: Report install skipped (already installed)
+  ansible.builtin.debug:
+    msg: "Ping DS already installed at {{ ds_install_path }}. Skipping unpack and setup."
+  when: pingds_installed
