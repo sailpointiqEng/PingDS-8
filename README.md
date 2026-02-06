@@ -45,3 +45,36 @@ idp-playbooks/
 ## Defaults (group_vars/all.yml)
 
 Paths: `/opt/apps/opendj`, `/opt/apps`; ports; `bootstrap_replication_servers`. Override in Tower as needed.
+========================
+
+## Ansible Tower setup
+
+### Job templates
+
+Create one job template per playbook. Suggested set:
+
+| Template name       | Playbook                              | Purpose |
+|---------------------|----------------------------------------|--------|
+| PingDS – Full       | `playbooks/site.yml`                   | Full run: prepare → install → configure → start → replication verify → validate |
+| PingDS – Host prepare | `playbooks/host_prepare.yml`         | Host prep only (Java, user, paths) |
+| PingDS – Install    | `playbooks/pingds_install.yml`         | Unzip only |
+| PingDS – Configure  | `playbooks/pingds_configure.yml`      | Run setup (config store) only |
+| PingDS – Start      | `playbooks/pingds_start.yml`           | Start DS only |
+| PingDS – Config only | `playbooks/config_only.yml`           | Configure + start + replication verify |
+| PingDS – Replication verify | `playbooks/pingds_replication_verify.yml` | Replication check |
+| PingDS – Validate   | `playbooks/pingds_post_deploy_validate.yml` | Post-deploy validation |
+
+### Inventory
+
+- Use a group named **`pingds_config`** (all playbooks target this group).
+- Add your DS hosts to that group.
+
+### Variables
+
+**Vault (secrets):** `deployment_id`, `deployment_id_password`, `root_user_password`, `monitor_user_password`, `am_config_admin_password`
+
+**Group vars (e.g. for `pingds_config`):** `bootstrap_replication_servers` (list, e.g. `["example1:8989","example2:8989","example3:8989"]`). Optional: `ds_zip_name`, `ds_install_path`, `ds_install_base`, ports.
+
+**Host vars (per host):** `server_id` (e.g. 1, 2, 3), `hostname` (e.g. example1).
+
+**Required for Configure (and Full / Config only):** All vault vars; group `bootstrap_replication_servers`; each host `server_id` and `hostname`.
