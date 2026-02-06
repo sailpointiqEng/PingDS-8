@@ -1,5 +1,10 @@
 ---
 # Post-deployment validation: service, binds, base DN, AM config admin, replication
+- name: "LOG | Validate - Running post-deploy checks"
+  ansible.builtin.debug:
+    msg: "Phase: Validate. Steps: service running, root bind, base DN exists, AM config admin bind, replication status."
+  changed_when: false
+
 - name: "Validate 1 - Service running"
   ansible.builtin.command: "{{ ds_install_path }}/bin/status"
   register: _status

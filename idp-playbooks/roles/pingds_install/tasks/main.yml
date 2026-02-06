@@ -1,5 +1,10 @@
 ---
 # Ping DS 8 install = unzip only (ready for setup); do NOT run setup
+- name: "LOG | Install - Starting (unzip only; no setup)"
+  ansible.builtin.debug:
+    msg: "Phase: Install. Steps: check if already unzipped, ensure path, copy ZIP if needed, unzip, set ownership to opendj."
+  changed_when: false
+
 - name: Check if Ping DS is already unzipped (ready for setup)
   ansible.builtin.stat:
     path: "{{ ds_install_path }}/setup"

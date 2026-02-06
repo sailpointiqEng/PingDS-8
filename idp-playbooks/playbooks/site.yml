@@ -4,6 +4,12 @@
 - name: Full deployment – host prepare, install, configure, start, replication verify, validate
   hosts: pingds_config
   serial: 1  # one host at a time so bootstrap targets exist
+  pre_tasks:
+    - name: "LOG | Full deployment starting"
+      ansible.builtin.debug:
+        msg: "Ping DS full deployment starting. Phases: host prepare → install → configure → start → replication verify → validate."
+      run_once: true
+      changed_when: false
   roles:
     - pingds_host_prepare
     - pingds_install

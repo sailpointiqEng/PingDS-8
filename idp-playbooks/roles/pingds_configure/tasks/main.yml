@@ -1,5 +1,10 @@
 ---
 # Configure = run setup as DS config store (am-config + replication bootstrap); do NOT start server
+- name: "LOG | Configure - Starting (run setup as config store)"
+  ansible.builtin.debug:
+    msg: "Phase: Configure. Steps: check if already configured, require deployment_id/passwords, build setup args, run setup (am-config + replication bootstrap)."
+  changed_when: false
+
 - name: Check if Ping DS is already configured
   ansible.builtin.stat:
     path: "{{ ds_install_path }}/config/server.xml"

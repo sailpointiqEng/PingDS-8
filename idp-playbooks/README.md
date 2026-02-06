@@ -98,6 +98,12 @@ Create one job template per playbook. Point each template at this project, the p
 | **pingds_replication_verify** | dsreplication status |
 | **pingds_post_deploy_validate** | Service, root bind, base DN, AM config admin bind, replication status |
 
-## Defaults (group_vars/all.yml)
+## Logging and step-by-step output (Ansible Tower)
 
-Paths: `ds_install_path` `/opt/apps/opendj`, `ds_install_base` `/opt/apps`; ports (LDAP 1389, LDAPS 1636, admin 4444, replication 8989, HTTPS 8443); `bootstrap_replication_servers`; `root_user_dn`, `base_dn`. Override in Tower inventory (group/host vars) or Vault as needed.
+Job output is tuned for clear step-by-step logs:
+
+- **ansible.cfg** – `stdout_callback = yaml` so each task result is shown in a readable way; `display_ok_hosts` and `display_skipped_hosts` so all task outcomes appear in the job log.
+- **Phase headers** – Each role starts with a `LOG |` debug task that prints the current phase and the steps that will run (e.g. "Phase: Host prepare. Steps: gather facts, disk check, JDK 17...").
+- **Full deployment** – `site.yml` runs a single "Full deployment starting" log line before any role.
+
+**More detail per task (module arguments, return values):** In the Tower Job Template, set **Verbosity** to **2** or **3**. Verbosity 0 (default) shows task names and results; 2–3 adds module input/output so you can see exactly what each task did.

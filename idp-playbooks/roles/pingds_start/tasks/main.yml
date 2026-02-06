@@ -1,5 +1,10 @@
 ---
 # Ensure Ping DS server is running (start if not)
+- name: "LOG | Start - Checking if DS is running"
+  ansible.builtin.debug:
+    msg: "Phase: Start. Steps: check status, start if not running, wait for admin port, verify."
+  changed_when: false
+
 - name: Check if DS is running
   ansible.builtin.command: "{{ ds_install_path }}/bin/status"
   register: _status

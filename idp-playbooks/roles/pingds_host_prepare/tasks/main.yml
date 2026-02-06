@@ -1,5 +1,10 @@
 ---
 # Host preparation for Ping DS 8 (config store)
+- name: "LOG | Host prepare - Starting (JDK 17, opendj user/group, /opt/apps)"
+  ansible.builtin.debug:
+    msg: "Phase: Host prepare. Steps: gather facts, disk check, JDK 17 verify/install, create opendj user/group, create /opt/apps and /opt/apps/opendj, firewall, NTP."
+  changed_when: false
+
 - name: Gather facts
   ansible.builtin.setup:
     gather_subset: minimal
