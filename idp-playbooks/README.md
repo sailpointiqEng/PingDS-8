@@ -16,32 +16,88 @@ idp-playbooks/
 └── README.md
 ```
 
-## Ansible Tower
+## Ansible Tower setup
 
-- **Project**: Point Tower project at this repo (idp-playbooks).
-- **Inventory**: Manage in Tower; define group `pingds_config` and hosts; set host vars (`server_id`, `hostname`) and group/vault vars (secrets, `deployment_id`).
-- **Job template**: Project = this repo, playbook = `playbooks/<name>.yml`, inventory = your Tower inventory.
+### Job templates
 
-## Playbooks
+Create one job template per playbook. Point each template at this project, the playbook path below, and your inventory (group `pingds_config`). Attach a **Vault** credential for secrets (see Variables).
 
-| Job template       | Playbook                                |
-|--------------------|-----------------------------------------|
-| PingDS – Full      | `playbooks/site.yml`                    |
-| PingDS – Host prep | `playbooks/host_prepare.yml`            |
-| PingDS – Install   | `playbooks/pingds_install.yml`          |
-| PingDS – Configure | `playbooks/pingds_configure.yml`       |
-| PingDS – Verify    | `playbooks/pingds_replication_verify.yml` |
-| PingDS – Validate  | `playbooks/pingds_post_deploy_validate.yml` or `validate_only.yml` |
-| PingDS – Config only | `playbooks/config_only.yml`          |
+| Template name            | Playbook                                    | Purpose |
+|--------------------------|---------------------------------------------|---------|
+| **PingDS – Full**        | `playbooks/site.yml`                        | Full run: prepare → install → configure → start → replication verify → validate |
+| **PingDS – Host prepare**| `playbooks/host_prepare.yml`                | Host prep only (JDK 17, opendj user/group, /opt/apps) |
+| **PingDS – Install**     | `playbooks/pingds_install.yml`               | Unzip DS only (does not run setup) |
+| **PingDS – Configure**  | `playbooks/pingds_configure.yml`            | Run setup as config store only (does not start server) |
+| **PingDS – Start**       | `playbooks/pingds_start.yml`                 | Start DS only |
+| **PingDS – Config only** | `playbooks/config_only.yml`                 | Configure + start + replication verify (no install) |
+| **PingDS – Replication verify** | `playbooks/pingds_replication_verify.yml` | Replication status check |
+| **PingDS – Validate**    | `playbooks/pingds_post_deploy_validate.yml`  | Post-deploy validation (service, binds, base DN, AM config admin, replication) |
+| **PingDS – Validate only** | `playbooks/validate_only.yml`              | Same as Validate (optional second template) |
+
+### Inventory
+
+- Define a group named **`pingds_config`** (all playbooks use `hosts: pingds_config`).
+- Add your DS hosts to that group (e.g. example1, example2, example3).
+- Set **host vars** per host: `server_id`, `hostname`.
+
+### Variables
+
+**Vault (secrets)** – store in a Tower Vault credential or encrypted group/host vars:
+
+| Variable                     | Required for |
+|-----------------------------|--------------|
+| `deployment_id`             | Configure, Full, Config only |
+| `deployment_id_password`    | Configure, Full, Config only |
+| `root_user_password`        | Configure, Replication verify, Validate |
+| `monitor_user_password`     | Configure, Full, Config only |
+| `am_config_admin_password`  | Configure, Validate |
+
+**Group vars** (e.g. for group `pingds_config`):
+
+| Variable                       | Required | Description |
+|-------------------------------|----------|-------------|
+| `bootstrap_replication_servers` | Yes (for configure) | List, e.g. `["example1:8989","example2:8989","example3:8989"]` |
+| `ds_zip_name`                 | Optional | If install copies ZIP from project (e.g. `DS-8.0.2.zip`) |
+| `ds_install_path`             | Optional | Default `"/opt/apps/opendj"` |
+| `ds_install_base`             | Optional | Default `"/opt/apps"` |
+| Ports, `root_user_dn`, `base_dn` | Optional | Override only if not using defaults |
+
+**Host vars** (per host in `pingds_config`):
+
+| Variable   | Required   | Description |
+|------------|------------|-------------|
+| `server_id` | Yes (for configure) | Unique per server, e.g. `1`, `2`, `3` |
+| `hostname`  | Yes (for configure) | This host’s FQDN or name (e.g. `example1`) |
+
+**Quick reference – which template needs what:**
+
+- **Full / Config only / Configure:** All Vault vars; group `bootstrap_replication_servers`; each host `server_id`, `hostname`.
+- **Host prepare / Install / Start:** No required vars (defaults OK); optional `ds_zip_name` for Install if using project file.
+- **Replication verify:** `root_user_password` (e.g. in Vault).
+- **Validate:** `root_user_password`, `am_config_admin_password` (e.g. in Vault).
+
+## Playbooks (summary)
+
+- **site.yml** – Full deployment (all phases).
+- **host_prepare.yml** – Host preparation only.
+- **pingds_install.yml** – Unzip only.
+- **pingds_configure.yml** – Run setup only.
+- **pingds_start.yml** – Start server only.
+- **config_only.yml** – Configure + start + replication verify.
+- **pingds_replication_verify.yml** – Replication check.
+- **pingds_post_deploy_validate.yml** / **validate_only.yml** – Post-deploy validation.
 
 ## Roles
 
-- **pingds_host_prepare** – Java, user/group, disk, firewall, time sync
-- **pingds_install** – Unpack DS ZIP, setup am-config (skips if installed)
-- **pingds_configure** – Start DS
-- **pingds_replication_verify** – dsreplication status
-- **pingds_post_deploy_validate** – Service, binds, base DN, AM config admin, replication
+| Role                      | Purpose |
+|---------------------------|---------|
+| **pingds_host_prepare**   | JDK 17 (verify/install), group/user opendj (no login), /opt/apps and /opt/apps/opendj, firewall, NTP |
+| **pingds_install**        | Unzip DS distribution only; set ownership to opendj (no setup) |
+| **pingds_configure**      | Run setup as DS config store (am-config + replication bootstrap); runs as opendj |
+| **pingds_start**          | Ensure DS is running (start if not); runs as opendj |
+| **pingds_replication_verify** | dsreplication status |
+| **pingds_post_deploy_validate** | Service, root bind, base DN, AM config admin bind, replication status |
 
 ## Defaults (group_vars/all.yml)
 
-Paths: `/opt/apps/opendj`, `/opt/apps`; ports; `bootstrap_replication_servers`. Override in Tower as needed.
+Paths: `ds_install_path` `/opt/apps/opendj`, `ds_install_base` `/opt/apps`; ports (LDAP 1389, LDAPS 1636, admin 4444, replication 8989, HTTPS 8443); `bootstrap_replication_servers`; `root_user_dn`, `base_dn`. Override in Tower inventory (group/host vars) or Vault as needed.

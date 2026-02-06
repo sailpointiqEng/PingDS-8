@@ -1,0 +1,3 @@
+ds_install_path: "/opt/apps/opendj"
+admin_connector_port: 4444
+pingds_install_user: opendj

@@ -1,30 +1,69 @@
 ---
-# Start Ping DS and optional post-setup configuration
-- name: Check if DS is running
-  ansible.builtin.command: "{{ ds_install_path }}/bin/status"
-  register: _status
-  changed_when: false
-  failed_when: false
+# Configure = run setup as DS config store (am-config + replication bootstrap); do NOT start server
+- name: Check if Ping DS is already configured
+  ansible.builtin.stat:
+    path: "{{ ds_install_path }}/config/server.xml"
+  register: _ds_config
+  vars:
+    ds_install_path: "{{ ds_install_path | default('/opt/apps/opendj') }}"
 
-- name: Report DS already running (skip start)
+- name: Set pingds_configured fact
+  ansible.builtin.set_fact:
+    pingds_configured: "{{ _ds_config.stat.exists | default(false) }}"
+
+- name: Require deployment_id and deployment_id_password
+  ansible.builtin.assert:
+    that:
+      - deployment_id is defined
+      - deployment_id | length > 0
+      - deployment_id_password is defined
+    fail_msg: "Set deployment_id and deployment_id_password (e.g. in Tower Vault). Generate once with dskeymgr create-deployment-id."
+  when: not pingds_configured
+
+- name: Build setup command arguments
+  ansible.builtin.set_fact:
+    _setup_args: >-
+      --serverId {{ server_id }}
+      --deploymentId {{ deployment_id }}
+      --deploymentIdPassword {{ deployment_id_password }}
+      --rootUserDN {{ root_user_dn }}
+      --rootUserPassword {{ root_user_password }}
+      --monitorUserPassword {{ monitor_user_password }}
+      --hostname {{ hostname }}
+      --adminConnectorPort {{ admin_connector_port }}
+      --ldapPort {{ ldap_port }}
+      --enableStartTls
+      --ldapsPort {{ ldaps_port }}
+      --httpsPort {{ https_port }}
+      --replicationPort {{ replication_port }}
+      {% for rs in bootstrap_replication_servers %}
+      --bootstrapReplicationServer {{ rs }}
+      {% endfor %}
+      --profile am-config
+      --set am-config/amConfigAdminPassword:{{ am_config_admin_password }}
+      --acceptLicense
+      {% if pingds_setup_start_server %}
+      --start
+      {% endif %}
+  when:
+    - not pingds_configured
+    - deployment_id is defined
+    - deployment_id | length > 0
+
+- name: Run Ping DS setup (am-config profile, config store)
+  ansible.builtin.command: "{{ ds_install_path }}/setup {{ _setup_args }}"
+  when: not pingds_configured and _setup_args is defined
+  no_log: true
+  register: _setup_run
+  become: true
+  become_user: "{{ pingds_install_user | default('opendj') }}"
+
+- name: Fail if setup failed
+  ansible.builtin.fail:
+    msg: "Ping DS setup failed. Check logs on host."
+  when: not pingds_configured and _setup_run is defined and _setup_run.rc is defined and _setup_run.rc != 0
+
+- name: Report configure skipped (already configured)
   ansible.builtin.debug:
-    msg: "Ping DS already running at {{ ds_install_path }}. Skipping start."
-  when: _status.rc == 0
-
-- name: Start Ping DS
-  ansible.builtin.command: "{{ ds_install_path }}/bin/start-ds"
-  when: _status.rc != 0
-
-- name: Wait for DS to be ready
-  ansible.builtin.wait_for:
-    port: "{{ admin_connector_port }}"
-    host: "127.0.0.1"
-    delay: 3
-    timeout: 60
-  when: _status.rc != 0
-
-- name: Verify DS is running
-  ansible.builtin.command: "{{ ds_install_path }}/bin/status"
-  register: _status_after
-  changed_when: false
-  failed_when: _status_after.rc != 0
+    msg: "Ping DS already configured at {{ ds_install_path }}. Skipping setup."
+  when: pingds_configured

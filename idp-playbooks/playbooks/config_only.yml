@@ -1,7 +1,8 @@
 ---
-# Config-only run (second-time: configure + verify, no install)
-- name: Configure and verify only
+# Config-only run (configure + start + replication verify; no install)
+- name: Configure, start, and verify only
   hosts: pingds_config
   roles:
     - pingds_configure
+    - pingds_start
     - pingds_replication_verify

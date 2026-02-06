@@ -1,13 +1,7 @@
-# Defaults for Ping DS install (am-config profile)
+# Defaults for Ping DS install (unzip only; no setup)
 ds_install_path: "/opt/apps/opendj"
 ds_install_base: "/opt/apps"
 ds_zip_name: "DS-8.0.2.zip"
 ds_zip_path: "/tmp/{{ ds_zip_name }}"
-root_user_dn: "uid=admin"
-base_dn: "ou=am-config"
-ldap_port: 1389
-ldaps_port: 1636
-https_port: 8443
-admin_connector_port: 4444
-replication_port: 8989
-pingds_setup_start_server: false
+pingds_install_user: opendj
+pingds_install_group: opendj

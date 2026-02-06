@@ -1,2 +1,12 @@
+# Defaults for Ping DS configure (run setup as config store)
 ds_install_path: "/opt/apps/opendj"
+pingds_install_user: opendj
+root_user_dn: "uid=admin"
+base_dn: "ou=am-config"
+ldap_port: 1389
+ldaps_port: 1636
+https_port: 8443
 admin_connector_port: 4444
+replication_port: 8989
+# Set true to start server after setup (otherwise use pingds_start role)
+pingds_setup_start_server: false

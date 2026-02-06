@@ -1,6 +1,6 @@
 ---
-# Install Ping DS only (am-config profile; skips if already installed)
-- name: Install Ping DS (am-config)
+# Install only (unzip DS distribution; does not run setup)
+- name: Install Ping DS (unzip only)
   hosts: pingds_config
   serial: 1
   roles:

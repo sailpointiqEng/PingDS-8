@@ -1,0 +1,6 @@
+---
+# Start Ping DS only (ensure server is running)
+- name: Start Ping DS
+  hosts: pingds_config
+  roles:
+    - pingds_start

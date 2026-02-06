@@ -7,6 +7,8 @@ pingds_java_packages:
 pingds_java_version_required: "17"
 pingds_install_user: opendj
 pingds_install_group: opendj
+ds_install_base: "/opt/apps"
+ds_install_path: "/opt/apps/opendj"
 pingds_min_disk_free_gb: 10
 pingds_firewall_ports:
   - 1389

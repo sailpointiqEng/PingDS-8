@@ -1,6 +1,7 @@
 ---
-# Configure / start Ping DS only
-- name: Configure and start Ping DS
+# Configure only (run setup as DS config store; does not start server)
+- name: Configure Ping DS (run setup)
   hosts: pingds_config
+  serial: 1
   roles:
     - pingds_configure
