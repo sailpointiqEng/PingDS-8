@@ -7,7 +7,7 @@
 
 - name: Get replication status
   ansible.builtin.command:
-    cmd: "{{ ds_install_path }}/bin/dsreplication status --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ admin_connector_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ root_user_password }} --no-prompt"
+    cmd: "{{ ds_install_path }}/bin/dsreplication status --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ admin_connector_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ ds_rootUserPassword }} --no-prompt"
   register: _repl_status
   changed_when: false
   no_log: true

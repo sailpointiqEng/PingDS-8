@@ -32,7 +32,7 @@
       --deploymentId {{ deployment_id }}
       --deploymentIdPassword {{ deployment_id_password }}
       --rootUserDN {{ root_user_dn }}
-      --rootUserPassword {{ root_user_password }}
+      --rootUserPassword {{ ds_rootUserPassword }}
       --monitorUserPassword {{ monitor_user_password }}
       --hostname {{ hostname }}
       --adminConnectorPort {{ admin_connector_port }}
@@ -45,7 +45,7 @@
       --bootstrapReplicationServer {{ rs }}
       {% endfor %}
       --profile am-config
-      --set am-config/amConfigAdminPassword:{{ am_config_admin_password }}
+      --set am-config/amConfigAdminPassword:{{ ds_am_ConfigAdminPassword }}
       --acceptLicense
       {% if pingds_setup_start_server %}
       --start

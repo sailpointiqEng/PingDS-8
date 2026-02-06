@@ -48,9 +48,9 @@ Create one job template per playbook. Point each template at this project, the p
 |-----------------------------|--------------|
 | `deployment_id`             | Configure, Full, Config only |
 | `deployment_id_password`    | Configure, Full, Config only |
-| `root_user_password`        | Configure, Replication verify, Validate |
+| `ds_rootUserPassword`        | Configure, Replication verify, Validate |
 | `monitor_user_password`     | Configure, Full, Config only |
-| `am_config_admin_password`  | Configure, Validate |
+| `ds_am_ConfigAdminPassword`  | Configure, Validate |
 
 **Group vars** (e.g. for group `pingds_config`):
 
@@ -73,8 +73,8 @@ Create one job template per playbook. Point each template at this project, the p
 
 - **Full / Config only / Configure:** All Vault vars; group `bootstrap_replication_servers`; each host `server_id`, `hostname`.
 - **Host prepare / Install / Start:** No required vars (defaults OK); optional `ds_zip_name` for Install if using project file.
-- **Replication verify:** `root_user_password` (e.g. in Vault).
-- **Validate:** `root_user_password`, `am_config_admin_password` (e.g. in Vault).
+- **Replication verify:** `ds_rootUserPassword` (e.g. in Vault).
+- **Validate:** `ds_rootUserPassword`, `ds_am_ConfigAdminPassword` (e.g. in Vault).
 
 ## Playbooks (summary)
 

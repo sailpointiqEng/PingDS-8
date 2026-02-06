@@ -8,9 +8,9 @@
 
 # DS admin
 root_user_dn: "uid=admin"
-# root_user_password: "SET_VIA_VAULT"
+# ds_rootUserPassword: "SET_VIA_VAULT"
 # monitor_user_password: "SET_VIA_VAULT"
-# am_config_admin_password: "SET_VIA_VAULT"
+# ds_am_ConfigAdminPassword: "SET_VIA_VAULT"
 
 # Config store
 base_dn: "ou=am-config"
