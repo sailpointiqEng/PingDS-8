@@ -1,0 +1,34 @@
+# Project-level defaults for Ping DS config store playbooks
+# Override in Ansible Tower inventory (group/host vars) or extra vars / Vault.
+# Inventory (hosts, groups) is managed in Ansible Tower.
+
+# Deployment (same for all nodes; set in Tower Vault)
+# deployment_id: "SET_VIA_VAULT_OR_EXTRA_VARS"
+# deployment_id_password: "SET_VIA_VAULT"
+
+# DS admin
+root_user_dn: "uid=admin"
+# root_user_password: "SET_VIA_VAULT"
+# monitor_user_password: "SET_VIA_VAULT"
+# am_config_admin_password: "SET_VIA_VAULT"
+
+# Config store
+base_dn: "ou=am-config"
+
+# Paths: unzip to /opt/apps -> /opt/apps/opendj
+ds_install_path: "/opt/apps/opendj"
+ds_install_base: "/opt/apps"
+ds_zip_name: "DS-8.0.2.zip"
+
+# Default ports (override per host in Tower host vars if needed)
+ldap_port: 1389
+ldaps_port: 1636
+https_port: 8443
+admin_connector_port: 4444
+replication_port: 8989
+
+# Bootstrap replication servers (same on every node)
+bootstrap_replication_servers:
+  - "example1:8989"
+  - "example2:8989"
+  - "example3:8989"

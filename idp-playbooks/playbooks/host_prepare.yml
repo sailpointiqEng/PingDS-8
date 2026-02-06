@@ -1,0 +1,6 @@
+---
+# Host preparation only (Java, user, disk, firewall, time)
+- name: Prepare hosts for Ping DS
+  hosts: pingds_config
+  roles:
+    - pingds_host_prepare

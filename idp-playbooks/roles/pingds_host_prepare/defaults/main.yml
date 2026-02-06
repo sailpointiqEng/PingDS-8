@@ -1,0 +1,16 @@
+# Defaults for host preparation (Ping DS 8) - JDK 17 only
+# RHEL/CentOS; for Debian/Ubuntu override with e.g. openjdk-17-jdk
+pingds_java_packages:
+  - java-17-openjdk
+  - java-17-openjdk-devel
+# Version to verify (must be 17); install skipped when this version is present
+pingds_java_version_required: "17"
+pingds_install_user: opendj
+pingds_install_group: opendj
+pingds_min_disk_free_gb: 10
+pingds_firewall_ports:
+  - 1389
+  - 1636
+  - 4444
+  - 8989
+  - 8443

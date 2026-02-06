@@ -1,0 +1,40 @@
+---
+# Post-deployment validation: service, binds, base DN, AM config admin, replication
+- name: "Validate 1 - Service running"
+  ansible.builtin.command: "{{ ds_install_path }}/bin/status"
+  register: _status
+  changed_when: false
+  failed_when: _status.rc != 0
+
+- name: "Validate 2 - Root user bind (LDAP)"
+  ansible.builtin.command: "{{ ds_install_path }}/bin/ldapsearch --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ ldap_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ root_user_password }} --baseDN \"\" --searchScope base \"(objectClass=*)\" 1.1 --no-prompt"
+  register: _root_bind
+  changed_when: false
+  no_log: true
+  failed_when: _root_bind.rc != 0
+
+- name: "Validate 3 - Config store base DN exists"
+  ansible.builtin.command: "{{ ds_install_path }}/bin/ldapsearch --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ ldap_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ root_user_password }} --baseDN \"{{ base_dn }}\" --searchScope base \"(objectClass=*)\" 1.1 --no-prompt"
+  register: _base_dn
+  changed_when: false
+  no_log: true
+  failed_when: _base_dn.rc != 0
+
+- name: "Validate 4 - AM config admin bind"
+  ansible.builtin.command: "{{ ds_install_path }}/bin/ldapsearch --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ ldap_port }} --bindDN \"{{ am_config_admin_dn }}\" --bindPassword {{ am_config_admin_password }} --baseDN \"{{ base_dn }}\" --searchScope base \"(objectClass=*)\" 1.1 --no-prompt"
+  register: _am_bind
+  changed_when: false
+  no_log: true
+  failed_when: _am_bind.rc != 0
+
+- name: "Validate 5 - Replication status"
+  ansible.builtin.command:
+    cmd: "{{ ds_install_path }}/bin/dsreplication status --hostname {{ ansible_host | default(inventory_hostname) }} --port {{ admin_connector_port }} --bindDN \"{{ root_user_dn }}\" --bindPassword {{ root_user_password }} --no-prompt"
+  register: _repl
+  changed_when: false
+  no_log: true
+  failed_when: _repl.rc != 0
+
+- name: Post-deploy validation passed
+  ansible.builtin.debug:
+    msg: "All validation checks passed on {{ inventory_hostname }}."

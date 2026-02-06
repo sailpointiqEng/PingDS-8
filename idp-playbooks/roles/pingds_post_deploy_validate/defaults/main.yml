@@ -1,0 +1,7 @@
+ds_install_path: "/opt/apps/opendj"
+admin_connector_port: 4444
+ldap_port: 1389
+ldaps_port: 1636
+root_user_dn: "uid=admin"
+base_dn: "ou=am-config"
+am_config_admin_dn: "uid=am-config,ou=admins,ou=am-config"

@@ -1,0 +1,6 @@
+---
+# Validation only (health checks)
+- name: Validate only
+  hosts: pingds_config
+  roles:
+    - pingds_post_deploy_validate

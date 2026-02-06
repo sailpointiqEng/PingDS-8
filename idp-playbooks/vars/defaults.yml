@@ -1,0 +1,3 @@
+# Optional shared defaults (override in Tower or group_vars)
+# ds_install_path: "/opt/apps/opendj"
+# ds_install_base: "/opt/apps"
